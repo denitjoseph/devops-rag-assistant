@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 
+from app.services.rag_service import ask_question
+
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -16,6 +18,16 @@ def chat():
             "error": "Question is required"
         }), 400
 
-    return jsonify({
-        "answer": f"You asked: {question}"
-    })
+    try:
+
+        answer = ask_question(question)
+
+        return jsonify({
+            "answer": answer
+        })
+
+    except Exception as error:
+
+        return jsonify({
+            "error": str(error)
+        }), 500
