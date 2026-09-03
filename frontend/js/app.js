@@ -64,7 +64,18 @@ async function sendQuestion() {
             throw new Error(data.error || "Something went wrong");
         }
 
-        addMessage(data.answer, "bot");
+        let answer = data.answer;
+
+        if (data.sources && data.sources.length > 0) {
+
+            answer += "\n\nSources:\n";
+
+            data.sources.forEach(source => {
+                answer += `- ${source}\n`;
+            });
+        }
+
+        addMessage(answer, "bot");
 
     } catch (error) {
 

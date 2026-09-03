@@ -1,14 +1,5 @@
-from langchain_ollama import ChatOllama
-
 from app.vectorstore.chroma_service import get_vectorstore
-
-
-def get_llm():
-
-    return ChatOllama(
-        model="gemma3:4b",
-        temperature=0
-    )
+from app.services.llm_service import get_llm
 
 
 def ask_question(question):
@@ -20,33 +11,59 @@ def ask_question(question):
         k=3
     )
 
-    context = "\n\n".join(
-        document.page_content
-        for document in results
-    )
+    if not results:
+        return {
+            "answer": "I could not find relevant information in the documentation.",
+            "sources": []
+        }
+
+    context_parts = []
+
+    sources = []
+
+    for document in results:
+
+        context_parts.append(
+            document.page_content
+        )
+
+        source = document.metadata.get(
+            "source",
+            "Unknown"
+        )
+
+        if source not in sources:
+            sources.append(source)
+
+    context = "\n\n".join(context_parts)
 
     prompt = f"""
 You are a DevOps AI Assistant.
 
-Answer the user's question using the provided documentation.
+Answer the user's question using ONLY the provided documentation.
 
-If the documentation does not contain enough information
-to answer the question, say that you do not have enough
-information in the provided documentation.
+If the documentation does not contain enough information,
+say:
 
+"I could not find enough information in the provided documentation."
+
+Do not use your general knowledge.
 Do not invent information.
 
-Documentation:
+DOCUMENTATION:
 {context}
 
-User Question:
+USER QUESTION:
 {question}
 
-Answer:
+ANSWER:
 """
 
     llm = get_llm()
 
     response = llm.invoke(prompt)
 
-    return response.content
+    return {
+        "answer": response.content,
+        "sources": sources
+    }

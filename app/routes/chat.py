@@ -14,17 +14,16 @@ def chat():
     question = data.get("question", "").strip()
 
     if not question:
+
         return jsonify({
             "error": "Question is required"
         }), 400
 
     try:
 
-        answer = ask_question(question)
+        result = ask_question(question)
 
-        return jsonify({
-            "answer": answer
-        })
+        return jsonify(result)
 
     except Exception as error:
 
